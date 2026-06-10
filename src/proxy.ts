@@ -7,8 +7,8 @@ const intlMiddleware = createMiddleware(routing);
 export default function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Pure admin routes — bypass i18n
-  if (pathname.startsWith('/admin')) {
+  // API routes & admin — bypass i18n entirely
+  if (pathname.startsWith('/api') || pathname.startsWith('/admin')) {
     return NextResponse.next();
   }
 
