@@ -1,26 +1,109 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ── BRAND DESIGN TOKENS ─────────────────────────────────────────────────── */
+@theme {
+  /* Colors */
+  --color-gold:          #C9A84C;
+  --color-gold-light:    #E8D5A3;
+  --color-gold-dark:     #A08535;
+  --color-fuchsia:       #E91E8C;
+  --color-fuchsia-light: #FFD6EE;
+  --color-cream:         #FFF9F5;
+  --color-deep:          #0D0D0D;
+  --color-soft-pink:     #FFE4F0;
+  --color-whatsapp:      #25D366;
+  --color-whatsapp-dark: #128C7E;
+
+  /* Typography – CSS variables injected by next/font */
+  --font-heading: var(--font-cormorant, "Cormorant Garamond"), serif;
+  --font-body:    var(--font-poppins, "Poppins"), sans-serif;
+  --font-accent:  var(--font-dancing, "Dancing Script"), cursive;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ── BASE STYLES ─────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #FFF9F5;
+  color: #1A1A1A;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+/* ── WHATSAPP PULSE ANIMATION ────────────────────────────────────────────── */
+@keyframes wa-pulse {
+  0%   { box-shadow: 0 0 0 0    rgba(37, 211, 102, 0.70); }
+  70%  { box-shadow: 0 0 0 18px rgba(37, 211, 102, 0.00); }
+  100% { box-shadow: 0 0 0 0    rgba(37, 211, 102, 0.00); }
+}
+
+.wa-pulse {
+  animation: wa-pulse 2s ease-out infinite;
+}
+
+/* ── GOLD SHIMMER TEXT ───────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+.gold-shimmer {
+  background: linear-gradient(
+    90deg,
+    #C9A84C 0%,
+    #E8D5A3 40%,
+    #C9A84C 60%,
+    #A08535 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3.5s linear infinite;
+}
+
+/* ── FADE-UP SECTION ANIMATION ───────────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.65s ease-out both;
+}
+
+/* ── GRAIN TEXTURE OVERLAY (hero) ────────────────────────────────────────── */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 1;
+}
+
+/* ── SCROLLBAR ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 5px; }
+::-webkit-scrollbar-track { background: #FFF9F5; }
+::-webkit-scrollbar-thumb { background: #C9A84C; border-radius: 3px; }
+
+/* ── SELECTION ───────────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(233, 30, 140, 0.14);
+  color: #1A1A1A;
 }
