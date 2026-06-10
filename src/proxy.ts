@@ -7,8 +7,14 @@ const intlMiddleware = createMiddleware(routing);
 export default function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // API routes & admin — bypass i18n entirely
-  if (pathname.startsWith('/api') || pathname.startsWith('/admin')) {
+  // API routes, admin, icons — bypass i18n entirely
+  if (
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/admin') ||
+    pathname === '/icon' ||
+    pathname === '/apple-icon' ||
+    pathname === '/favicon.ico'
+  ) {
     return NextResponse.next();
   }
 
