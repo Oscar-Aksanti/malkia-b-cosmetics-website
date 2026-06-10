@@ -75,7 +75,7 @@ export default function AdminSidebar() {
       {/* Bottom */}
       <div className="p-4 border-t border-white/8">
         <div className="px-3 py-2.5 mb-2">
-          <p className="text-white/70 text-xs font-medium">Hamin Banga</p>
+          <p className="text-white/70 text-xs font-medium">Hamim Banga</p>
           <p className="text-white/30 text-[10px]">Fondateur & CEO</p>
         </div>
         <button

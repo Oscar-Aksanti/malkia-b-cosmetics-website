@@ -64,7 +64,7 @@ export default function DashboardPage() {
         <main className="flex-1 min-w-0 p-4 md:p-8">
           {/* Header */}
           <div className="mb-8">
-            <p className="text-[#C9A84C] text-sm font-medium mb-1">Bonjour, Hamin Banga 👋</p>
+            <p className="text-[#C9A84C] text-sm font-medium mb-1">Bonjour, Hamim Banga 👋</p>
             <h1 className="text-white text-2xl md:text-3xl font-bold">Tableau de bord</h1>
             <p className="text-white/40 text-sm mt-1">Vue d&apos;ensemble de Malkia B Cosmetics</p>
           </div>

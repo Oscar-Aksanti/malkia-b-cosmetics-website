@@ -17,7 +17,7 @@ export default async function BrandStory() {
             <div className="relative rounded-3xl overflow-hidden aspect-[4/5]">
               <Image
                 src="/images/ceo/ceo-beauty-specialists.png"
-                alt="Hamin Banga — CEO Malkia B Cosmetics"
+                alt="Hamim Banga — CEO Malkia B Cosmetics"
                 fill
                 className="object-cover"
               />
@@ -67,7 +67,7 @@ export default async function BrandStory() {
                 <div className="w-10 h-10 rounded-full bg-gold/20 overflow-hidden relative">
                   <Image
                     src="/images/ceo/ceo-quality-assured.png"
-                    alt="Hamin Banga"
+                    alt="Hamim Banga"
                     fill
                     className="object-cover"
                   />

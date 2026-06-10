@@ -32,7 +32,7 @@ export default async function NotrHistoirePage() {
         <div className="absolute inset-0">
           <Image
             src="/images/ceo/ceo-beauty-specialists.png"
-            alt="Hamin Banga — CEO Malkia B Cosmetics"
+            alt="Hamim Banga — CEO Malkia B Cosmetics"
             fill
             priority
             className="object-cover opacity-20"
@@ -58,7 +58,7 @@ export default async function NotrHistoirePage() {
               <div className="relative rounded-3xl overflow-hidden aspect-[4/5]">
                 <Image
                   src="/images/ceo/ceo-quality-assured.png"
-                  alt="Hamin Banga — CEO"
+                  alt="Hamim Banga — CEO"
                   fill
                   className="object-cover"
                 />
@@ -90,7 +90,7 @@ export default async function NotrHistoirePage() {
             <div>
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 rounded-full bg-gold/20 overflow-hidden relative flex-shrink-0">
-                  <Image src="/images/ceo/ceo-quality-assured.png" alt="Hamin Banga" fill className="object-cover" />
+                  <Image src="/images/ceo/ceo-quality-assured.png" alt="Hamim Banga" fill className="object-cover" />
                 </div>
                 <div>
                   <p className="font-body font-bold text-deep">{t('founderName')}</p>
@@ -173,7 +173,7 @@ export default async function NotrHistoirePage() {
               '/images/ceo/ceo-la-tchadienne.png',
             ].map((src, i) => (
               <div key={i} className="relative rounded-2xl overflow-hidden aspect-square">
-                <Image src={src} alt={`Hamin Banga ${i + 1}`} fill className="object-cover hover:scale-105 transition-transform duration-500" />
+                <Image src={src} alt={`Hamim Banga ${i + 1}`} fill className="object-cover hover:scale-105 transition-transform duration-500" />
               </div>
             ))}
           </div>
