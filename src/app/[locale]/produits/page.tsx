@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
-import { PRODUCTS as ALL_PRODUCTS } from '@/lib/products-data';
-import type { Category } from '@/types';
+import { getProducts, PRODUCTS_CHANGED_EVENT } from '@/lib/products-storage';
+import type { Category, Product } from '@/types';
 
 const CATEGORIES: { key: 'all' | Category; label_fr: string; label_en: string }[] = [
   { key: 'all',       label_fr: 'Tous',      label_en: 'All'         },
@@ -22,13 +22,32 @@ export default function ProduitsPage() {
   const t = useTranslations('products');
   const tCats = useTranslations('categories');
 
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | Category>('all');
   const [sort, setSort] = useState<SortOption>('popular');
   const [showFilters, setShowFilters] = useState(false);
 
+  // Hydrate from localStorage on mount and stay in sync
+  useEffect(() => {
+    setAllProducts(getProducts());
+    const onChanged = (e: Event) => {
+      const d = (e as CustomEvent<Product[]>).detail;
+      if (d) setAllProducts(d);
+    };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'malkia_products') setAllProducts(getProducts());
+    };
+    window.addEventListener(PRODUCTS_CHANGED_EVENT, onChanged);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener(PRODUCTS_CHANGED_EVENT, onChanged);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
+
   const filtered = useMemo(() => {
-    let products = [...ALL_PRODUCTS];
+    let products = [...allProducts];
 
     // Category filter
     if (activeCategory !== 'all') {
@@ -57,7 +76,7 @@ export default function ProduitsPage() {
     }
 
     return products;
-  }, [search, activeCategory, sort]);
+  }, [allProducts, search, activeCategory, sort]);
 
   return (
     <div className="min-h-screen bg-cream">

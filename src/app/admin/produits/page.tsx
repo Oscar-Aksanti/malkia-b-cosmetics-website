@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import AdminGuard from '@/components/admin/AdminGuard';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import ProductModal from '@/components/admin/ProductModal';
-import { PRODUCTS as INITIAL_PRODUCTS } from '@/lib/products-data';
+import { getProducts, saveProducts, PRODUCTS_CHANGED_EVENT } from '@/lib/products-storage';
 import type { Product, StockStatus } from '@/types';
 import {
   Search,
@@ -31,13 +31,32 @@ const STOCK_CONFIG: Record<StockStatus, { label: string; icon: React.ElementType
 };
 
 export default function AdminProduitsPage() {
-  const [products, setProducts]       = useState<Product[]>(INITIAL_PRODUCTS);
-  const [search, setSearch]           = useState('');
-  const [filterCat, setFilterCat]     = useState<string>('all');
-  const [filterStock, setFilterStock] = useState<string>('all');
-  const [modalOpen, setModalOpen]     = useState(false);
+  const [products, setProducts]         = useState<Product[]>([]);
+  const [search, setSearch]             = useState('');
+  const [filterCat, setFilterCat]       = useState<string>('all');
+  const [filterStock, setFilterStock]   = useState<string>('all');
+  const [modalOpen, setModalOpen]       = useState(false);
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
-  const [deletingId, setDeletingId]   = useState<string | null>(null);
+  const [deletingId, setDeletingId]     = useState<string | null>(null);
+
+  // Load from localStorage on mount and sync across tabs
+  useEffect(() => {
+    setProducts(getProducts());
+
+    const onChanged = (e: Event) => {
+      const detail = (e as CustomEvent<Product[]>).detail;
+      if (detail) setProducts(detail);
+    };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'malkia_products') setProducts(getProducts());
+    };
+    window.addEventListener(PRODUCTS_CHANGED_EVENT, onChanged);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener(PRODUCTS_CHANGED_EVENT, onChanged);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     let list = [...products];
@@ -72,15 +91,22 @@ export default function AdminProduitsPage() {
   const handleSave = (saved: Product) => {
     setProducts((prev) => {
       const exists = prev.find((p) => p.id === saved.id);
-      if (exists) return prev.map((p) => (p.id === saved.id ? saved : p));
-      return [saved, ...prev];
+      const updated = exists
+        ? prev.map((p) => (p.id === saved.id ? saved : p))
+        : [saved, ...prev];
+      saveProducts(updated);
+      return updated;
     });
     setModalOpen(false);
     setModalProduct(null);
   };
 
   const confirmDelete = (id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    setProducts((prev) => {
+      const updated = prev.filter((p) => p.id !== id);
+      saveProducts(updated);
+      return updated;
+    });
     setDeletingId(null);
   };
 

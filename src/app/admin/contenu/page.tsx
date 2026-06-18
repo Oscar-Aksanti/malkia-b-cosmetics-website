@@ -1,10 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import AdminGuard from '@/components/admin/AdminGuard';
 import AdminSidebar from '@/components/admin/AdminSidebar';
-import { PRODUCTS as INITIAL_PRODUCTS } from '@/lib/products-data';
+import {
+  getContentSettings,
+  saveContentSettings,
+  CONTENT_CHANGED_EVENT,
+  type ContentSettings,
+} from '@/lib/content-storage';
+import {
+  getProducts,
+  saveProducts,
+  PRODUCTS_CHANGED_EVENT,
+} from '@/lib/products-storage';
 import type { Product } from '@/types';
 import { Check, Plus, Edit2, X as XIcon, Save } from 'lucide-react';
 
@@ -19,39 +29,96 @@ interface SloganItem {
   draft: string;
 }
 
-const INITIAL_SLOGANS: SloganItem[] = [
-  { id: 1, text: 'Unlock Your Beauty From Within', editing: false, draft: '' },
-  { id: 2, text: 'The Beauty is Real',             editing: false, draft: '' },
-  { id: 3, text: 'Glowing with Malkia B',          editing: false, draft: '' },
-  { id: 4, text: 'Feel Malkia',                    editing: false, draft: '' },
-  { id: 5, text: 'Beauty Origins Here',            editing: false, draft: '' },
-];
+function slogansToItems(texts: string[]): SloganItem[] {
+  return texts.map((text, i) => ({ id: i + 1, text, editing: false, draft: '' }));
+}
 
 export default function AdminContenuPage() {
   // Hero texts
-  const [heroFr1, setHeroFr1]       = useState('Votre Beauté,');
-  const [heroFr2, setHeroFr2]       = useState('Notre Priorité');
-  const [heroSubFr, setHeroSubFr]   = useState('True Beauty Comes From Within — Depuis 2015');
-  const [heroEn1, setHeroEn1]       = useState('Your Beauty,');
-  const [heroEn2, setHeroEn2]       = useState('Our Priority');
-  const [heroSubEn, setHeroSubEn]   = useState('True Beauty Comes From Within — Since 2015');
+  const [heroFr1,   setHeroFr1]   = useState('Votre Beauté,');
+  const [heroFr2,   setHeroFr2]   = useState('Notre Priorité');
+  const [heroSubFr, setHeroSubFr] = useState('True Beauty Comes From Within — Depuis 2015');
+  const [heroEn1,   setHeroEn1]   = useState('Your Beauty,');
+  const [heroEn2,   setHeroEn2]   = useState('Our Priority');
+  const [heroSubEn, setHeroSubEn] = useState('True Beauty Comes From Within — Since 2015');
 
   // Site-wide texts
-  const [badge, setBadge]           = useState('Depuis 2015');
-  const [cta1Fr, setCta1Fr]         = useState('Découvrir nos produits');
-  const [cta2Fr, setCta2Fr]         = useState('Commander via WhatsApp');
+  const [badge,   setBadge]   = useState('Depuis 2015');
+  const [cta1Fr,  setCta1Fr]  = useState('Découvrir nos produits');
+  const [cta2Fr,  setCta2Fr]  = useState('Commander via WhatsApp');
 
   // Products for featuring
-  const [products, setProducts]     = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
 
   // Slogans
-  const [slogans, setSlogans]       = useState<SloganItem[]>(INITIAL_SLOGANS);
-  const [nextId, setNextId]         = useState(INITIAL_SLOGANS.length + 1);
+  const [slogans, setSlogans] = useState<SloganItem[]>([]);
+  const [nextId,  setNextId]  = useState(100);
 
   // Save feedback
-  const [saved, setSaved]           = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  // Load all settings from localStorage on mount
+  useEffect(() => {
+    const content = getContentSettings();
+    setHeroFr1(content.heroFr1);
+    setHeroFr2(content.heroFr2);
+    setHeroSubFr(content.heroSubFr);
+    setHeroEn1(content.heroEn1);
+    setHeroEn2(content.heroEn2);
+    setHeroSubEn(content.heroSubEn);
+    setBadge(content.badge);
+    setCta1Fr(content.cta1Fr);
+    setCta2Fr(content.cta2Fr);
+    setSlogans(slogansToItems(content.slogans));
+    setNextId(content.slogans.length + 101);
+
+    setProducts(getProducts());
+
+    // Sync if another tab saves content
+    const onContent = (e: Event) => {
+      const d = (e as CustomEvent<ContentSettings>).detail;
+      if (!d) return;
+      setHeroFr1(d.heroFr1); setHeroFr2(d.heroFr2); setHeroSubFr(d.heroSubFr);
+      setHeroEn1(d.heroEn1); setHeroEn2(d.heroEn2); setHeroSubEn(d.heroSubEn);
+      setBadge(d.badge); setCta1Fr(d.cta1Fr); setCta2Fr(d.cta2Fr);
+      setSlogans(slogansToItems(d.slogans));
+    };
+    const onProducts = (e: Event) => {
+      const d = (e as CustomEvent<Product[]>).detail;
+      if (d) setProducts(d);
+    };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'malkia_content_settings') {
+        const c = getContentSettings();
+        setHeroFr1(c.heroFr1); setHeroFr2(c.heroFr2); setHeroSubFr(c.heroSubFr);
+        setHeroEn1(c.heroEn1); setHeroEn2(c.heroEn2); setHeroSubEn(c.heroSubEn);
+        setBadge(c.badge); setCta1Fr(c.cta1Fr); setCta2Fr(c.cta2Fr);
+        setSlogans(slogansToItems(c.slogans));
+      }
+      if (e.key === 'malkia_products') setProducts(getProducts());
+    };
+
+    window.addEventListener(CONTENT_CHANGED_EVENT, onContent);
+    window.addEventListener(PRODUCTS_CHANGED_EVENT, onProducts);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener(CONTENT_CHANGED_EVENT, onContent);
+      window.removeEventListener(PRODUCTS_CHANGED_EVENT, onProducts);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
 
   const handleSave = () => {
+    // Persist content settings
+    saveContentSettings({
+      heroFr1, heroFr2, heroSubFr,
+      heroEn1, heroEn2, heroSubEn,
+      badge, cta1Fr, cta2Fr,
+      slogans: slogans.map((s) => s.text),
+    });
+    // Persist featured flags in products
+    saveProducts(products);
+
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -70,7 +137,11 @@ export default function AdminContenuPage() {
 
   const saveSlogan = (id: number) => {
     setSlogans((prev) =>
-      prev.map((s) => (s.id === id && s.draft.trim() ? { ...s, text: s.draft.trim(), editing: false } : { ...s, editing: false }))
+      prev.map((s) =>
+        s.id === id && s.draft.trim()
+          ? { ...s, text: s.draft.trim(), editing: false }
+          : { ...s, editing: false }
+      )
     );
   };
 
@@ -80,7 +151,10 @@ export default function AdminContenuPage() {
 
   const addSlogan = () => {
     const id = nextId;
-    setSlogans((prev) => [...prev, { id, text: 'Nouveau slogan', editing: true, draft: 'Nouveau slogan' }]);
+    setSlogans((prev) => [
+      ...prev,
+      { id, text: 'Nouveau slogan', editing: true, draft: 'Nouveau slogan' },
+    ]);
     setNextId(id + 1);
   };
 
@@ -196,7 +270,7 @@ export default function AdminContenuPage() {
               <div>
                 <h2 className="text-white font-semibold text-sm">Produits vedettes (Best Sellers)</h2>
                 <p className="text-white/40 text-xs mt-0.5">
-                  {products.filter((p) => p.is_featured).length} produits en vedette actuellement
+                  {products.filter((p) => p.is_featured).length} produits en vedette — cliquez &ldquo;Sauvegarder&rdquo; pour appliquer
                 </p>
               </div>
             </div>
@@ -264,11 +338,17 @@ export default function AdminContenuPage() {
                         }
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') saveSlogan(s.id);
-                          if (e.key === 'Escape') setSlogans((prev) => prev.map((x) => (x.id === s.id ? { ...x, editing: false } : x)));
+                          if (e.key === 'Escape')
+                            setSlogans((prev) =>
+                              prev.map((x) => (x.id === s.id ? { ...x, editing: false } : x))
+                            );
                         }}
                         className="flex-1 bg-transparent text-white text-sm outline-none border-b border-[#C9A84C]/50 pb-0.5"
                       />
-                      <button onClick={() => saveSlogan(s.id)} className="text-emerald-400 hover:text-emerald-300 transition-colors">
+                      <button
+                        onClick={() => saveSlogan(s.id)}
+                        className="text-emerald-400 hover:text-emerald-300 transition-colors"
+                      >
                         <Check className="w-4 h-4" />
                       </button>
                     </>
@@ -294,6 +374,9 @@ export default function AdminContenuPage() {
                 </div>
               ))}
             </div>
+            <p className="text-white/25 text-xs mt-3">
+              Les modifications des slogans sont appliquées après &ldquo;Sauvegarder&rdquo;.
+            </p>
           </div>
         </main>
       </div>
