@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { getFeaturedProducts, PRODUCTS_CHANGED_EVENT } from '@/lib/products-storage';
+import { getFeaturedProducts, syncProductsFromDB, PRODUCTS_CHANGED_EVENT } from '@/lib/products-storage';
 import { FEATURED_PRODUCTS } from '@/lib/products-data';
 import type { Product } from '@/types';
 import ProductCard from '@/components/products/ProductCard';
@@ -20,6 +20,11 @@ export default function BestSellers() {
   useEffect(() => {
     const stored = getFeaturedProducts();
     if (stored.length > 0) setFeatured(stored);
+    // Fetch fresh from Supabase
+    syncProductsFromDB().then((all) => {
+      const fresh = all.filter((p) => p.is_featured && p.is_active);
+      if (fresh.length > 0) setFeatured(fresh);
+    });
 
     const onChanged = (e: Event) => {
       const all = (e as CustomEvent<Product[]>).detail;

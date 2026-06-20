@@ -1,7 +1,6 @@
 /**
- * Persistent content storage via localStorage.
+ * Content storage — localStorage as fast cache, Supabase as source of truth.
  * Stores hero texts, slogans, badge, and CTA texts.
- * Dispatches a CustomEvent so every open component refreshes in real time.
  */
 
 export const CONTENT_STORAGE_KEY   = 'malkia_content_settings';
@@ -54,4 +53,34 @@ export function getContentSettings(): ContentSettings {
 export function saveContentSettings(settings: ContentSettings): void {
   localStorage.setItem(CONTENT_STORAGE_KEY, JSON.stringify(settings));
   window.dispatchEvent(new CustomEvent(CONTENT_CHANGED_EVENT, { detail: settings }));
+}
+
+/* ── Supabase sync (async) ────────────────────────────────────────────────── */
+
+export async function syncContentFromDB(): Promise<ContentSettings> {
+  try {
+    const res = await fetch('/api/content', { cache: 'no-store' });
+    if (!res.ok) return getContentSettings();
+    const fresh: ContentSettings = await res.json();
+    saveContentSettings(fresh);
+    return fresh;
+  } catch {
+    return getContentSettings();
+  }
+}
+
+export async function pushContentToDB(settings: ContentSettings): Promise<void> {
+  const hash = process.env.NEXT_PUBLIC_ADMIN_HASH ?? '';
+  try {
+    await fetch('/api/content', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${hash}`,
+      },
+      body: JSON.stringify(settings),
+    });
+  } catch (err) {
+    console.warn('[pushContentToDB] failed:', err);
+  }
 }

@@ -100,7 +100,7 @@ export default function ProductModal({ product, onClose, onSave }: ProductModalP
   const handleSave = () => {
     const now = new Date().toISOString();
     const saved: Product = {
-      id:             product?.id ?? Date.now().toString(),
+      id:             product?.id ?? crypto.randomUUID(),
       product_code:   product?.product_code ?? `MKB-NEW-${Date.now()}`,
       slug:           product?.slug ?? nameFr.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
       name_fr:        nameFr,

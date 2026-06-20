@@ -5,7 +5,7 @@ import Image from 'next/image';
 import AdminGuard from '@/components/admin/AdminGuard';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import ProductModal from '@/components/admin/ProductModal';
-import { getProducts, saveProducts, PRODUCTS_CHANGED_EVENT } from '@/lib/products-storage';
+import { getProducts, saveProducts, syncProductsFromDB, pushProductsToDB, PRODUCTS_CHANGED_EVENT } from '@/lib/products-storage';
 import type { Product, StockStatus } from '@/types';
 import {
   Search,
@@ -39,9 +39,10 @@ export default function AdminProduitsPage() {
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
   const [deletingId, setDeletingId]     = useState<string | null>(null);
 
-  // Load from localStorage on mount and sync across tabs
+  // Load from localStorage on mount, then fetch fresh data from Supabase
   useEffect(() => {
     setProducts(getProducts());
+    syncProductsFromDB().then((fresh) => { if (fresh.length > 0) setProducts(fresh); });
 
     const onChanged = (e: Event) => {
       const detail = (e as CustomEvent<Product[]>).detail;
@@ -95,6 +96,7 @@ export default function AdminProduitsPage() {
         ? prev.map((p) => (p.id === saved.id ? saved : p))
         : [saved, ...prev];
       saveProducts(updated);
+      pushProductsToDB(updated); // persist to Supabase
       return updated;
     });
     setModalOpen(false);
@@ -105,6 +107,7 @@ export default function AdminProduitsPage() {
     setProducts((prev) => {
       const updated = prev.filter((p) => p.id !== id);
       saveProducts(updated);
+      pushProductsToDB(updated); // persist to Supabase
       return updated;
     });
     setDeletingId(null);

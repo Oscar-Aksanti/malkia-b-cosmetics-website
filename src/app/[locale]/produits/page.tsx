@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
-import { getProducts, PRODUCTS_CHANGED_EVENT } from '@/lib/products-storage';
+import { getProducts, syncProductsFromDB, PRODUCTS_CHANGED_EVENT } from '@/lib/products-storage';
 import type { Category, Product } from '@/types';
 
 const CATEGORIES: { key: 'all' | Category; label_fr: string; label_en: string }[] = [
@@ -28,9 +28,10 @@ export default function ProduitsPage() {
   const [sort, setSort] = useState<SortOption>('popular');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Hydrate from localStorage on mount and stay in sync
+  // Hydrate from localStorage, then fetch fresh from Supabase
   useEffect(() => {
     setAllProducts(getProducts());
+    syncProductsFromDB().then((fresh) => { if (fresh.length > 0) setAllProducts(fresh); });
     const onChanged = (e: Event) => {
       const d = (e as CustomEvent<Product[]>).detail;
       if (d) setAllProducts(d);

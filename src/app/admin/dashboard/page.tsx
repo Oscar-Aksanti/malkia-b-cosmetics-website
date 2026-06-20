@@ -1,8 +1,10 @@
 'use client';
 
+import { useState, useEffect, useMemo } from 'react';
 import AdminGuard from '@/components/admin/AdminGuard';
 import AdminSidebar from '@/components/admin/AdminSidebar';
-import { PRODUCTS } from '@/lib/products-data';
+import { getProducts, syncProductsFromDB, PRODUCTS_CHANGED_EVENT } from '@/lib/products-storage';
+import type { Product } from '@/types';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -12,34 +14,25 @@ import Link from 'next/link';
 
 /* ── Mock order data (remplacé par Supabase quand configuré) ─────────────── */
 const MOCK_ORDERS = [
-  { id: 'ORD-001', products: 'Biovène Éclat Suprême × 1', total: 35, status: 'confirmed',  date: '2025-06-03', lang: 'fr' },
-  { id: 'ORD-002', products: 'Malkia Intense × 2',         total: 60, status: 'pending',    date: '2025-06-03', lang: 'fr' },
-  { id: 'ORD-003', products: 'AHA Body Lotion × 1',        total: 15, status: 'delivered',  date: '2025-06-02', lang: 'en' },
-  { id: 'ORD-004', products: 'Anti-Acne Set × 1',          total: 40, status: 'pending',    date: '2025-06-02', lang: 'fr' },
-  { id: 'ORD-005', products: 'Flat Tummy Tea × 2',         total: 30, status: 'cancelled',  date: '2025-06-01', lang: 'en' },
+  { id: 'ORD-001', products: 'Biovène Éclat Suprême × 1', total: 35, status: 'confirmed', date: '2025-06-03', lang: 'fr' },
+  { id: 'ORD-002', products: 'Malkia Intense × 2',         total: 60, status: 'pending',   date: '2025-06-03', lang: 'fr' },
+  { id: 'ORD-003', products: 'AHA Body Lotion × 1',        total: 15, status: 'delivered', date: '2025-06-02', lang: 'en' },
+  { id: 'ORD-004', products: 'Anti-Acne Set × 1',          total: 40, status: 'pending',   date: '2025-06-02', lang: 'fr' },
+  { id: 'ORD-005', products: 'Flat Tummy Tea × 2',         total: 30, status: 'cancelled', date: '2025-06-01', lang: 'en' },
 ];
 
-/* ── Derived stats ───────────────────────────────────────────────────────── */
-const totalProducts  = PRODUCTS.length;
-const featuredCount  = PRODUCTS.filter((p) => p.is_featured).length;
-const totalRevenue   = MOCK_ORDERS.filter((o) => o.status !== 'cancelled').reduce((s, o) => s + o.total, 0);
-const pendingOrders  = MOCK_ORDERS.filter((o) => o.status === 'pending').length;
+const totalRevenue = MOCK_ORDERS
+  .filter((o) => o.status !== 'cancelled')
+  .reduce((s, o) => s + o.total, 0);
+const pendingOrders = MOCK_ORDERS.filter((o) => o.status === 'pending').length;
 
-/* ── Category breakdown for pie chart ────────────────────────────────────── */
 const CATEGORY_COLORS: Record<string, string> = {
   body: '#C9A84C', face: '#E91E8C', fragrance: '#8B5CF6', wellness: '#10B981',
 };
 const CATEGORY_LABELS: Record<string, string> = {
   body: 'Corps', face: 'Visage', fragrance: 'Parfums', wellness: 'Bien-être',
 };
-const categoryData = Object.entries(
-  PRODUCTS.reduce((acc, p) => {
-    acc[p.category] = (acc[p.category] ?? 0) + 1;
-    return acc;
-  }, {} as Record<string, number>)
-).map(([key, value]) => ({ name: CATEGORY_LABELS[key] ?? key, value, color: CATEGORY_COLORS[key] ?? '#999' }));
 
-/* ── Monthly revenue mock (bar chart) ────────────────────────────────────── */
 const revenueData = [
   { month: 'Jan', rev: 320 }, { month: 'Fév', rev: 480 }, { month: 'Mar', rev: 390 },
   { month: 'Avr', rev: 620 }, { month: 'Mai', rev: 710 }, { month: 'Juin', rev: 580 },
@@ -56,6 +49,48 @@ const STATUS_FR: Record<string, string> = {
 };
 
 export default function DashboardPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+
+  // Load from localStorage, then fetch fresh from Supabase
+  useEffect(() => {
+    setProducts(getProducts());
+    syncProductsFromDB().then((fresh) => { if (fresh.length > 0) setProducts(fresh); });
+
+    const onChanged = (e: Event) => {
+      const d = (e as CustomEvent<Product[]>).detail;
+      if (d) setProducts(d);
+    };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'malkia_products') setProducts(getProducts());
+    };
+    window.addEventListener(PRODUCTS_CHANGED_EVENT, onChanged);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener(PRODUCTS_CHANGED_EVENT, onChanged);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
+
+  const totalProducts  = products.length;
+  const activeProducts = products.filter((p) => p.is_active).length;
+  const featuredCount  = products.filter((p) => p.is_featured).length;
+  const inStockCount   = products.filter((p) => p.stock_status === 'in_stock').length;
+  const lowStockCount  = products.filter((p) => p.stock_status === 'low_stock').length;
+  const outStockCount  = products.filter((p) => p.stock_status === 'out_of_stock').length;
+
+  const categoryData = useMemo(() =>
+    Object.entries(
+      products.reduce((acc, p) => {
+        acc[p.category] = (acc[p.category] ?? 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+    ).map(([key, value]) => ({
+      name:  CATEGORY_LABELS[key] ?? key,
+      value,
+      color: CATEGORY_COLORS[key] ?? '#999',
+    })),
+  [products]);
+
   return (
     <AdminGuard>
       <div className="flex min-h-screen">
@@ -72,10 +107,34 @@ export default function DashboardPage() {
           {/* ── Stats ─────────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {[
-              { label: 'Produits actifs',   value: totalProducts, icon: Package,     color: '#C9A84C', sub: `${featuredCount} en vedette`  },
-              { label: 'Commandes reçues',  value: MOCK_ORDERS.length, icon: ShoppingBag, color: '#E91E8C', sub: `${pendingOrders} en attente`  },
-              { label: 'Revenu estimé',     value: `$${totalRevenue}`, icon: TrendingUp, color: '#10B981', sub: 'commandes confirmées'          },
-              { label: 'Note moyenne',      value: '4.9★',        icon: Star,        color: '#8B5CF6', sub: 'satisfaction client'            },
+              {
+                label: 'Produits au total',
+                value: totalProducts,
+                icon: Package,
+                color: '#C9A84C',
+                sub: `${featuredCount} en vedette · ${activeProducts} actifs`,
+              },
+              {
+                label: 'Commandes reçues',
+                value: MOCK_ORDERS.length,
+                icon: ShoppingBag,
+                color: '#E91E8C',
+                sub: `${pendingOrders} en attente`,
+              },
+              {
+                label: 'Revenu estimé',
+                value: `$${totalRevenue}`,
+                icon: TrendingUp,
+                color: '#10B981',
+                sub: 'commandes confirmées',
+              },
+              {
+                label: 'Note moyenne',
+                value: '4.9★',
+                icon: Star,
+                color: '#8B5CF6',
+                sub: 'satisfaction client',
+              },
             ].map(({ label, value, icon: Icon, color, sub }) => (
               <div key={label} className="bg-white/5 border border-white/8 rounded-2xl p-5">
                 <div className="flex items-start justify-between mb-3">
@@ -86,6 +145,20 @@ export default function DashboardPage() {
                 <p className="text-2xl font-bold text-white mb-0.5">{value}</p>
                 <p className="text-white/50 text-xs font-medium">{label}</p>
                 <p className="text-white/30 text-[10px] mt-1">{sub}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Stock summary ──────────────────────────────────────────── */}
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            {[
+              { label: 'En stock',     value: inStockCount,  color: '#10B981', bg: 'bg-emerald-400/10 border-emerald-400/20' },
+              { label: 'Stock faible', value: lowStockCount, color: '#F59E0B', bg: 'bg-amber-400/10 border-amber-400/20'     },
+              { label: 'Épuisé',       value: outStockCount, color: '#EF4444', bg: 'bg-red-400/10 border-red-400/20'         },
+            ].map(({ label, value, color, bg }) => (
+              <div key={label} className={`rounded-2xl border p-4 ${bg}`}>
+                <p className="text-xl font-bold" style={{ color }}>{value}</p>
+                <p className="text-white/50 text-xs mt-0.5">{label}</p>
               </div>
             ))}
           </div>
@@ -109,13 +182,19 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             </div>
 
-            {/* Category pie chart */}
+            {/* Category pie chart — live from products */}
             <div className="bg-white/5 border border-white/8 rounded-2xl p-5">
               <h2 className="text-white font-semibold text-sm mb-4">Produits par catégorie</h2>
               <div className="flex items-center gap-4">
                 <ResponsiveContainer width="50%" height={180}>
                   <PieChart>
-                    <Pie data={categoryData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value">
+                    <Pie
+                      data={categoryData}
+                      cx="50%" cy="50%"
+                      innerRadius={50} outerRadius={80}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
                       {categoryData.map((entry, i) => (
                         <Cell key={i} fill={entry.color} />
                       ))}
@@ -136,6 +215,36 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* ── Quick links ───────────────────────────────────────────── */}
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <Link
+              href="/admin/produits"
+              className="flex items-center gap-3 p-4 bg-white/5 border border-white/8 rounded-2xl hover:border-[#C9A84C]/30 hover:bg-[#C9A84C]/5 transition-all group"
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#C9A84C]/15 flex items-center justify-center">
+                <Package className="w-4 h-4 text-[#C9A84C]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-medium">Gérer les produits</p>
+                <p className="text-white/35 text-xs">{totalProducts} produits</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-[#C9A84C] transition-colors" />
+            </Link>
+            <Link
+              href="/admin/contenu"
+              className="flex items-center gap-3 p-4 bg-white/5 border border-white/8 rounded-2xl hover:border-[#E91E8C]/30 hover:bg-[#E91E8C]/5 transition-all group"
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#E91E8C]/15 flex items-center justify-center">
+                <Star className="w-4 h-4 text-[#E91E8C]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-medium">Contenu & Slogans</p>
+                <p className="text-white/35 text-xs">{featuredCount} en vedette</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-[#E91E8C] transition-colors" />
+            </Link>
           </div>
 
           {/* ── Recent orders ─────────────────────────────────────────── */}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   getContentSettings,
+  syncContentFromDB,
   CONTENT_CHANGED_EVENT,
   DEFAULT_CONTENT,
   type ContentSettings,
@@ -13,9 +14,12 @@ export default function SlogansCarousel() {
   const [slogans, setSlogans] = useState<string[]>(DEFAULT_CONTENT.slogans);
   const [current, setCurrent] = useState(0);
 
-  // Hydrate from localStorage on mount, then listen for admin changes
+  // Hydrate from localStorage, then fetch fresh from Supabase
   useEffect(() => {
     setSlogans(getContentSettings().slogans);
+    syncContentFromDB().then((fresh) => {
+      if (fresh.slogans?.length) { setSlogans(fresh.slogans); setCurrent(0); }
+    });
 
     const onChanged = (e: Event) => {
       const d = (e as CustomEvent<ContentSettings>).detail;

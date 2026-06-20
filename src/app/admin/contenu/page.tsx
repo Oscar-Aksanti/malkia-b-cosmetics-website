@@ -7,12 +7,16 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import {
   getContentSettings,
   saveContentSettings,
+  syncContentFromDB,
+  pushContentToDB,
   CONTENT_CHANGED_EVENT,
   type ContentSettings,
 } from '@/lib/content-storage';
 import {
   getProducts,
   saveProducts,
+  syncProductsFromDB,
+  pushProductsToDB,
   PRODUCTS_CHANGED_EVENT,
 } from '@/lib/products-storage';
 import type { Product } from '@/types';
@@ -57,44 +61,34 @@ export default function AdminContenuPage() {
   // Save feedback
   const [saved, setSaved] = useState(false);
 
-  // Load all settings from localStorage on mount
-  useEffect(() => {
-    const content = getContentSettings();
-    setHeroFr1(content.heroFr1);
-    setHeroFr2(content.heroFr2);
-    setHeroSubFr(content.heroSubFr);
-    setHeroEn1(content.heroEn1);
-    setHeroEn2(content.heroEn2);
-    setHeroSubEn(content.heroSubEn);
-    setBadge(content.badge);
-    setCta1Fr(content.cta1Fr);
-    setCta2Fr(content.cta2Fr);
+  const applyContent = (content: ContentSettings) => {
+    setHeroFr1(content.heroFr1); setHeroFr2(content.heroFr2); setHeroSubFr(content.heroSubFr);
+    setHeroEn1(content.heroEn1); setHeroEn2(content.heroEn2); setHeroSubEn(content.heroSubEn);
+    setBadge(content.badge); setCta1Fr(content.cta1Fr); setCta2Fr(content.cta2Fr);
     setSlogans(slogansToItems(content.slogans));
     setNextId(content.slogans.length + 101);
+  };
 
+  // Load from localStorage first, then fetch fresh from Supabase
+  useEffect(() => {
+    applyContent(getContentSettings());
     setProducts(getProducts());
 
-    // Sync if another tab saves content
+    // Fetch fresh data from Supabase
+    syncContentFromDB().then(applyContent).catch(() => {});
+    syncProductsFromDB().then((fresh) => { if (fresh.length > 0) setProducts(fresh); }).catch(() => {});
+
+    // Sync when another tab saves
     const onContent = (e: Event) => {
       const d = (e as CustomEvent<ContentSettings>).detail;
-      if (!d) return;
-      setHeroFr1(d.heroFr1); setHeroFr2(d.heroFr2); setHeroSubFr(d.heroSubFr);
-      setHeroEn1(d.heroEn1); setHeroEn2(d.heroEn2); setHeroSubEn(d.heroSubEn);
-      setBadge(d.badge); setCta1Fr(d.cta1Fr); setCta2Fr(d.cta2Fr);
-      setSlogans(slogansToItems(d.slogans));
+      if (d) applyContent(d);
     };
     const onProducts = (e: Event) => {
       const d = (e as CustomEvent<Product[]>).detail;
       if (d) setProducts(d);
     };
     const onStorage = (e: StorageEvent) => {
-      if (e.key === 'malkia_content_settings') {
-        const c = getContentSettings();
-        setHeroFr1(c.heroFr1); setHeroFr2(c.heroFr2); setHeroSubFr(c.heroSubFr);
-        setHeroEn1(c.heroEn1); setHeroEn2(c.heroEn2); setHeroSubEn(c.heroSubEn);
-        setBadge(c.badge); setCta1Fr(c.cta1Fr); setCta2Fr(c.cta2Fr);
-        setSlogans(slogansToItems(c.slogans));
-      }
+      if (e.key === 'malkia_content_settings') applyContent(getContentSettings());
       if (e.key === 'malkia_products') setProducts(getProducts());
     };
 
@@ -106,18 +100,21 @@ export default function AdminContenuPage() {
       window.removeEventListener(PRODUCTS_CHANGED_EVENT, onProducts);
       window.removeEventListener('storage', onStorage);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSave = () => {
-    // Persist content settings
-    saveContentSettings({
+    const contentSettings = {
       heroFr1, heroFr2, heroSubFr,
       heroEn1, heroEn2, heroSubEn,
       badge, cta1Fr, cta2Fr,
       slogans: slogans.map((s) => s.text),
-    });
-    // Persist featured flags in products
+    };
+    saveContentSettings(contentSettings);
     saveProducts(products);
+    // Push to Supabase so changes are visible to everyone
+    pushContentToDB(contentSettings);
+    pushProductsToDB(products);
 
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
