@@ -15,6 +15,13 @@ import {
   DEFAULT_HERO,
   type HeroSettings,
 } from '@/lib/hero-settings';
+import {
+  getContentSettings,
+  syncContentFromDB,
+  CONTENT_CHANGED_EVENT,
+  DEFAULT_CONTENT,
+  type ContentSettings,
+} from '@/lib/content-storage';
 
 const fadeUp = (delay = 0) => ({
   initial:    { y: 28 },
@@ -30,25 +37,38 @@ export default function HeroSection() {
   const t      = useTranslations();
   const locale = useLocale() as Locale;
 
-  /* ── Hero settings (synced with admin) ──────────────────────────── */
+  /* ── Hero settings (slides/carousel, synced with admin) ─────────── */
   const [settings, setSettings] = useState<HeroSettings>(DEFAULT_HERO);
   const [activeIdx, setActiveIdx] = useState(0);
+
+  /* ── Content settings (hero text, synced with admin/contenu) ─────── */
+  const [content, setContent] = useState<ContentSettings>(DEFAULT_CONTENT);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount, then sync from Supabase
   useEffect(() => {
     setSettings(getHeroSettings());
+    setContent(getContentSettings());
+    syncContentFromDB().then((fresh) => setContent(fresh));
   }, []);
 
   // Listen for real-time updates from the admin panel (same tab)
   useEffect(() => {
-    const onChanged = (e: Event) => {
+    const onHeroChanged = (e: Event) => {
       const detail = (e as CustomEvent<HeroSettings>).detail;
       setSettings(detail);
       setActiveIdx(0);
     };
-    window.addEventListener(HERO_CHANGED_EVENT, onChanged);
-    return () => window.removeEventListener(HERO_CHANGED_EVENT, onChanged);
+    const onContentChanged = (e: Event) => {
+      const detail = (e as CustomEvent<ContentSettings>).detail;
+      if (detail) setContent(detail);
+    };
+    window.addEventListener(HERO_CHANGED_EVENT, onHeroChanged);
+    window.addEventListener(CONTENT_CHANGED_EVENT, onContentChanged);
+    return () => {
+      window.removeEventListener(HERO_CHANGED_EVENT, onHeroChanged);
+      window.removeEventListener(CONTENT_CHANGED_EVENT, onContentChanged);
+    };
   }, []);
 
   // Also listen for cross-tab storage changes
@@ -57,6 +77,9 @@ export default function HeroSection() {
       if (e.key === 'malkia_hero_settings') {
         setSettings(getHeroSettings());
         setActiveIdx(0);
+      }
+      if (e.key === 'malkia_content_settings') {
+        setContent(getContentSettings());
       }
     };
     window.addEventListener('storage', onStorage);
@@ -127,7 +150,7 @@ export default function HeroSection() {
           <motion.div {...fadeUp(0.1)}>
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-gold/20 border border-gold/40 rounded-full text-gold font-body text-sm font-medium mb-6 backdrop-blur-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-              Since 2015 · {t('hero.badge')}
+              {content.badge || 'Depuis 2015'}
             </span>
           </motion.div>
 
@@ -136,9 +159,9 @@ export default function HeroSection() {
             className="font-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-white leading-[1.05] mb-6"
             {...fadeUp(0.2)}
           >
-            {t('hero.headline')}
+            {locale === 'fr' ? content.heroFr1 : content.heroEn1}
             <br />
-            <span className="text-fuchsia">{t('hero.headline2')}</span>
+            <span className="text-fuchsia">{locale === 'fr' ? content.heroFr2 : content.heroEn2}</span>
           </motion.h1>
 
           {/* Slogan */}
@@ -154,7 +177,7 @@ export default function HeroSection() {
             className="font-body text-white/65 text-base md:text-lg mb-10 leading-relaxed"
             {...fadeUp(0.35)}
           >
-            {t('hero.subtitle')}
+            {locale === 'fr' ? content.heroSubFr : content.heroSubEn}
           </motion.p>
 
           {/* CTAs */}
@@ -163,7 +186,7 @@ export default function HeroSection() {
               href="/produits"
               className="inline-flex items-center justify-center px-8 py-4 bg-gold hover:bg-gold-dark text-deep font-body font-bold rounded-full text-base shadow-[0_4px_24px_rgba(201,168,76,0.45)] hover:shadow-[0_6px_32px_rgba(201,168,76,0.55)] transition-all duration-200 active:scale-95"
             >
-              {t('hero.cta1')}
+              {locale === 'fr' ? (content.cta1Fr || t('hero.cta1')) : t('hero.cta1')}
             </Link>
 
             <button
@@ -171,7 +194,7 @@ export default function HeroSection() {
               className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-white/10 hover:bg-white/18 border border-white/30 hover:border-whatsapp/60 text-white font-body font-semibold rounded-full text-base backdrop-blur-sm transition-all duration-200 active:scale-95"
             >
               <FaWhatsapp className="w-5 h-5 text-whatsapp" />
-              {t('hero.cta2')}
+              {locale === 'fr' ? (content.cta2Fr || t('hero.cta2')) : t('hero.cta2')}
             </button>
           </motion.div>
 

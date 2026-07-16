@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import AdminGuard from '@/components/admin/AdminGuard';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { PRODUCTS } from '@/lib/products-data';
+import { getProducts, syncProductsFromDB, PRODUCTS_CHANGED_EVENT } from '@/lib/products-storage';
+import type { Product } from '@/types';
 import {
   ResponsiveContainer,
   BarChart, Bar,
@@ -66,16 +68,37 @@ const TOOLTIP_STYLE = {
 const maxRevenu = Math.max(...TOP_PRODUCTS.map((p) => p.revenu));
 
 export default function AdminAnalytiquesPage() {
+  const [products, setProducts] = useState<Product[]>(PRODUCTS);
+
+  useEffect(() => {
+    setProducts(getProducts());
+    syncProductsFromDB().then((fresh) => { if (fresh.length > 0) setProducts(fresh); });
+
+    const onChanged = (e: Event) => {
+      const d = (e as CustomEvent<Product[]>).detail;
+      if (d?.length) setProducts(d);
+    };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'malkia_products') setProducts(getProducts());
+    };
+    window.addEventListener(PRODUCTS_CHANGED_EVENT, onChanged);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener(PRODUCTS_CHANGED_EVENT, onChanged);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
+
   const topProductsWithData = useMemo(
     () =>
       TOP_PRODUCTS.map((tp) => {
-        const product = PRODUCTS.find((p) => p.id === tp.id);
+        const product = products.find((p) => p.id === tp.id);
         return { ...tp, product };
       }).filter((tp) => tp.product),
-    []
+    [products]
   );
 
-  const stockAlerts = PRODUCTS.filter((p) => p.stock_status !== 'in_stock');
+  const stockAlerts = products.filter((p) => p.stock_status !== 'in_stock');
 
   return (
     <AdminGuard>
