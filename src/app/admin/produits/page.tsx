@@ -18,6 +18,8 @@ import {
   Edit2,
   Trash2,
   Plus,
+  CloudUpload,
+  Loader2,
 } from 'lucide-react';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -38,6 +40,8 @@ export default function AdminProduitsPage() {
   const [modalOpen, setModalOpen]       = useState(false);
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
   const [deletingId, setDeletingId]     = useState<string | null>(null);
+  const [syncing, setSyncing]           = useState(false);
+  const [syncMsg, setSyncMsg]           = useState<{ ok: boolean; text: string } | null>(null);
 
   // Load from localStorage on mount, then fetch fresh data from Supabase
   useEffect(() => {
@@ -77,6 +81,33 @@ export default function AdminProduitsPage() {
     inStock:  products.filter((p) => p.stock_status === 'in_stock').length,
     lowStock: products.filter((p) => p.stock_status === 'low_stock').length,
     outStock: products.filter((p) => p.stock_status === 'out_of_stock').length,
+  };
+
+  const syncToSupabase = async () => {
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const hash = process.env.NEXT_PUBLIC_ADMIN_HASH ?? '';
+      const res = await fetch('/api/products', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${hash}`,
+        },
+        body: JSON.stringify(products),
+      });
+      if (res.ok) {
+        setSyncMsg({ ok: true, text: `✓ ${products.length} produits synchronisés avec Supabase` });
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setSyncMsg({ ok: false, text: `Erreur ${res.status} : ${err.error ?? 'vérifiez NEXT_PUBLIC_ADMIN_HASH sur Vercel'}` });
+      }
+    } catch (e) {
+      setSyncMsg({ ok: false, text: 'Impossible de joindre l\'API — vérifiez la connexion' });
+    } finally {
+      setSyncing(false);
+      setTimeout(() => setSyncMsg(null), 8000);
+    }
   };
 
   const openAdd = () => {
@@ -120,20 +151,44 @@ export default function AdminProduitsPage() {
 
         <main className="flex-1 min-w-0 p-4 md:p-8">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-white text-2xl md:text-3xl font-bold">Produits</h1>
               <p className="text-white/40 text-sm mt-1">{products.length} produits dans le catalogue</p>
             </div>
-            <button
-              onClick={openAdd}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#C9A84C] text-black text-sm font-semibold rounded-xl hover:bg-[#C9A84C]/90 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Ajouter un produit</span>
-              <span className="sm:hidden">Ajouter</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={syncToSupabase}
+                disabled={syncing || products.length === 0}
+                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+                title="Synchroniser tous les produits vers Supabase (rend les prix visibles sur tous les appareils)"
+              >
+                {syncing
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <CloudUpload className="w-4 h-4" />}
+                <span className="hidden sm:inline">{syncing ? 'Sync...' : 'Sync Supabase'}</span>
+              </button>
+              <button
+                onClick={openAdd}
+                className="flex items-center gap-2 px-4 py-2.5 bg-[#C9A84C] text-black text-sm font-semibold rounded-xl hover:bg-[#C9A84C]/90 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Ajouter un produit</span>
+                <span className="sm:hidden">Ajouter</span>
+              </button>
+            </div>
           </div>
+
+          {/* Sync feedback */}
+          {syncMsg && (
+            <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-medium border ${
+              syncMsg.ok
+                ? 'bg-emerald-400/10 border-emerald-400/30 text-emerald-400'
+                : 'bg-red-400/10 border-red-400/30 text-red-400'
+            }`}>
+              {syncMsg.text}
+            </div>
+          )}
 
           {/* Stats bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
