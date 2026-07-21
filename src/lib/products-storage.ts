@@ -70,6 +70,11 @@ export async function syncProductsFromDB(): Promise<Product[]> {
  */
 export async function pushProductsToDB(products: Product[]): Promise<void> {
   const hash = process.env.NEXT_PUBLIC_ADMIN_HASH ?? '';
+  // Strip base64 images before sending — they can exceed Vercel's 4.5MB body limit
+  const lean = products.map((p) => ({
+    ...p,
+    images: p.images.filter((img) => !img.startsWith('data:')),
+  }));
   try {
     await fetch('/api/products', {
       method: 'PUT',
@@ -77,7 +82,7 @@ export async function pushProductsToDB(products: Product[]): Promise<void> {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${hash}`,
       },
-      body: JSON.stringify(products),
+      body: JSON.stringify(lean),
     });
   } catch (err) {
     console.warn('[pushProductsToDB] failed:', err);
