@@ -38,41 +38,49 @@ export async function PUT(req: NextRequest) {
     }
 
     const db = getServiceClient();
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-    // Strip base64 images before saving to DB (they belong in localStorage only)
-    const dbProducts = products.map((p) => ({
-      ...p,
-      images: (p.images as string[]).filter((img: string) => !img.startsWith('data:')),
-      // Ensure slug exists
-      slug: p.slug || p.product_code.toLowerCase().replace(/-/g, '') + '-' + p.name_en.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-    }));
+    // Prepare products: strip base64 images, ensure slug, remove non-UUID ids
+    const dbProducts = products.map((p: Record<string, unknown>) => {
+      const base = {
+        product_code:   p.product_code,
+        slug:           p.slug || String(p.product_code).toLowerCase().replace(/-/g, '') + '-' + String(p.name_en).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        name_fr:        p.name_fr,
+        name_en:        p.name_en,
+        description_fr: p.description_fr,
+        description_en: p.description_en,
+        category:       p.category,
+        price_usd:      p.price_usd,
+        images:         (p.images as string[]).filter((img: string) => !img.startsWith('data:')),
+        stock_status:   p.stock_status,
+        is_active:      p.is_active,
+        is_featured:    p.is_featured,
+      } as Record<string, unknown>;
 
-    // Upsert all products (insert new, update existing by id)
+      // Only include id if it's a valid UUID (non-UUID ids like '1','2' break Supabase)
+      if (UUID_REGEX.test(String(p.id))) {
+        base.id = p.id;
+      }
+      return base;
+    });
+
+    // Upsert by product_code — works for both seed products and new admin products
     const { error: upsertError } = await db
       .from('products')
-      .upsert(dbProducts, { onConflict: 'id' });
+      .upsert(dbProducts, { onConflict: 'product_code' });
 
-    if (upsertError) throw upsertError;
-
-    // Delete products that are in the DB but not in the new list
-    const { data: existingInDB } = await db.from('products').select('id');
-    const newIds = new Set(products.map((p: { id: string }) => p.id));
-    const toDelete = (existingInDB ?? [])
-      .map((r: { id: string }) => r.id)
-      .filter((id: string) => !newIds.has(id));
-
-    if (toDelete.length > 0) {
-      const { error: deleteError } = await db
-        .from('products')
-        .delete()
-        .in('id', toDelete);
-      if (deleteError) console.warn('[DELETE products]', deleteError);
+    if (upsertError) {
+      const msg = typeof upsertError === 'object'
+        ? (upsertError as { message?: string }).message ?? JSON.stringify(upsertError)
+        : String(upsertError);
+      throw new Error(msg);
     }
 
     return NextResponse.json({ ok: true, count: products.length });
   } catch (err) {
-    console.error('[PUT /api/products]', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    const msg = err instanceof Error ? err.message : JSON.stringify(err);
+    console.error('[PUT /api/products]', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
