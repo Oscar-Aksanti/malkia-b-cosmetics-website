@@ -21,7 +21,8 @@ export async function GET() {
   try {
     const db = getSupabaseClient();
     if (!db) throw new Error('Supabase not configured');
-    const { data, error } = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (db as any)
       .from('site_settings')
       .select('key, value')
       .in('key', CONTENT_KEYS);
@@ -29,7 +30,7 @@ export async function GET() {
     if (error) throw error;
 
     const result: ContentSettings = { ...DEFAULT_CONTENT };
-    for (const row of data ?? []) {
+    for (const row of (data ?? []) as { key: string; value: string }[]) {
       const key = row.key as keyof ContentSettings;
       if (key === 'slogans') {
         try { result.slogans = JSON.parse(row.value); } catch { /* keep default */ }
@@ -63,7 +64,8 @@ export async function PUT(req: NextRequest) {
         : String((settings as unknown as Record<string, unknown>)[key] ?? ''),
     }));
 
-    const { error } = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (db as any)
       .from('site_settings')
       .upsert(rows, { onConflict: 'key' });
 

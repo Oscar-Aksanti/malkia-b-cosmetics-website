@@ -61,7 +61,8 @@ export async function PUT(req: NextRequest) {
       return base;
     });
 
-    const { error: upsertError } = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: upsertError } = await (db as any)
       .from('products')
       .upsert(dbProducts, { onConflict: 'product_code' });
 
