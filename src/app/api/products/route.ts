@@ -44,7 +44,6 @@ export async function PUT(req: NextRequest) {
     const dbProducts = products.map((p: Record<string, unknown>) => {
       const base = {
         product_code:   p.product_code,
-        slug:           p.slug || String(p.product_code).toLowerCase().replace(/-/g, '') + '-' + String(p.name_en).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         name_fr:        p.name_fr,
         name_en:        p.name_en,
         description_fr: p.description_fr,
