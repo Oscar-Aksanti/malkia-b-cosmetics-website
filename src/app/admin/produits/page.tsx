@@ -103,13 +103,9 @@ export default function AdminProduitsPage() {
       });
       if (res.ok) {
         setSyncMsg({ ok: true, text: `✓ ${products.length} produits synchronisés — tous les appareils verront les mêmes prix` });
-      } else if (res.status === 401) {
-        setSyncMsg({ ok: false, text: 'Erreur 401 : NEXT_PUBLIC_ADMIN_HASH manquant ou incorrect sur Vercel' });
-      } else if (res.status === 500) {
-        setSyncMsg({ ok: false, text: 'Erreur 500 : SUPABASE_SERVICE_ROLE_KEY manquant sur Vercel' });
       } else {
         const err = await res.json().catch(() => ({}));
-        setSyncMsg({ ok: false, text: `Erreur ${res.status} : ${err.error ?? 'vérifiez les variables sur Vercel'}` });
+        setSyncMsg({ ok: false, text: `Erreur ${res.status} : ${err.error ?? err.message ?? JSON.stringify(err)}` });
       }
     } catch (e) {
       setSyncMsg({ ok: false, text: 'Impossible de joindre l\'API — vérifiez la connexion' });
