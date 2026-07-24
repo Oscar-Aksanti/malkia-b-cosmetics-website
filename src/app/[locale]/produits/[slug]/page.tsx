@@ -15,6 +15,7 @@ export const dynamic = 'force-dynamic';
 async function getProductFromDB(slug: string): Promise<Product | null> {
   try {
     const db = getSupabaseClient();
+    if (!db) return null;
     const { data, error } = await db
       .from('products')
       .select('*')
@@ -31,6 +32,7 @@ async function getProductFromDB(slug: string): Promise<Product | null> {
 async function getRelatedFromDB(product: Product, limit = 4): Promise<Product[]> {
   try {
     const db = getSupabaseClient();
+    if (!db) return [];
     const { data } = await db
       .from('products')
       .select('*')
