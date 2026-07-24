@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServiceClient } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 import { DEFAULT_CONTENT, type ContentSettings } from '@/lib/content-storage';
 
 function isAuthorized(req: NextRequest): boolean {
@@ -19,7 +19,8 @@ const CONTENT_KEYS: (keyof ContentSettings)[] = [
 // GET /api/content — returns content settings from site_settings table
 export async function GET() {
   try {
-    const db = getServiceClient();
+    const db = getSupabaseClient();
+    if (!db) throw new Error('Supabase not configured');
     const { data, error } = await db
       .from('site_settings')
       .select('key, value')
@@ -52,7 +53,8 @@ export async function PUT(req: NextRequest) {
 
   try {
     const settings: ContentSettings = await req.json();
-    const db = getServiceClient();
+    const db = getSupabaseClient();
+    if (!db) throw new Error('Supabase not configured');
 
     const rows = CONTENT_KEYS.map((key) => ({
       key,

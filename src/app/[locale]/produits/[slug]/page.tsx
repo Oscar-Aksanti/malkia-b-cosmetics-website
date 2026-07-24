@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getServiceClient } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 import { PRODUCTS, getProductBySlug, getRelatedProducts } from '@/lib/products-data';
 import ProductDetail from '@/components/products/ProductDetail';
 import type { Locale, Product } from '@/types';
@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 /* ── Fetch helpers ────────────────────────────────────────────────────────── */
 async function getProductFromDB(slug: string): Promise<Product | null> {
   try {
-    const db = getServiceClient();
+    const db = getSupabaseClient();
     const { data, error } = await db
       .from('products')
       .select('*')
@@ -30,7 +30,7 @@ async function getProductFromDB(slug: string): Promise<Product | null> {
 
 async function getRelatedFromDB(product: Product, limit = 4): Promise<Product[]> {
   try {
-    const db = getServiceClient();
+    const db = getSupabaseClient();
     const { data } = await db
       .from('products')
       .select('*')
