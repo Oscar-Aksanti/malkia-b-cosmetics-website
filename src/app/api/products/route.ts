@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/supabase';
+import { getSupabaseClient, getServiceClient } from '@/lib/supabase';
 
 function isAuthorized(req: NextRequest): boolean {
   const token = req.headers.get('authorization')?.replace('Bearer ', '') ?? '';
@@ -7,16 +7,11 @@ function isAuthorized(req: NextRequest): boolean {
   return expected !== '' && token === expected;
 }
 
-function getDB() {
-  const db = getSupabaseClient();
-  if (!db) throw new Error('Supabase not configured');
-  return db;
-}
-
 // GET /api/products
 export async function GET() {
   try {
-    const db = getDB();
+    const db = getSupabaseClient();
+    if (!db) throw new Error('Supabase not configured');
     const { data, error } = await db
       .from('products')
       .select('*')
@@ -40,7 +35,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
     }
 
-    const db = getDB();
+    const db = getServiceClient();
     const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
     const dbProducts = products.map((p: Record<string, unknown>) => {
@@ -86,13 +81,14 @@ export async function POST(req: NextRequest) {
   }
   try {
     const product = await req.json();
-    const db = getDB();
+    const db = getServiceClient();
     const toInsert = {
       ...product,
       images: (product.images as string[]).filter((img: string) => !img.startsWith('data:')),
       product_code: product.product_code?.startsWith('MKB-NEW-') ? '' : product.product_code,
     };
-    const { data, error } = await db.from('products').insert(toInsert).select().single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (db as any).from('products').insert(toInsert).select().single();
     if (error) throw error;
     return NextResponse.json(data);
   } catch (err) {

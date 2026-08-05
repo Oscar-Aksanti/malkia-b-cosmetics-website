@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/supabase';
+import { getSupabaseClient, getServiceClient } from '@/lib/supabase';
 import { DEFAULT_CONTENT, type ContentSettings } from '@/lib/content-storage';
 
 function isAuthorized(req: NextRequest): boolean {
@@ -16,11 +16,14 @@ const CONTENT_KEYS: (keyof ContentSettings)[] = [
   'slogans',
 ];
 
+type SettingRow = { key: string; value: string };
+
 // GET /api/content — returns content settings from site_settings table
 export async function GET() {
   try {
     const db = getSupabaseClient();
     if (!db) throw new Error('Supabase not configured');
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (db as any)
       .from('site_settings')
@@ -30,7 +33,7 @@ export async function GET() {
     if (error) throw error;
 
     const result: ContentSettings = { ...DEFAULT_CONTENT };
-    for (const row of (data ?? []) as { key: string; value: string }[]) {
+    for (const row of ((data ?? []) as SettingRow[])) {
       const key = row.key as keyof ContentSettings;
       if (key === 'slogans') {
         try { result.slogans = JSON.parse(row.value); } catch { /* keep default */ }
@@ -42,7 +45,7 @@ export async function GET() {
     return NextResponse.json(result);
   } catch (err) {
     console.error('[GET /api/content]', err);
-    return NextResponse.json(DEFAULT_CONTENT); // graceful fallback
+    return NextResponse.json(DEFAULT_CONTENT);
   }
 }
 
@@ -54,10 +57,9 @@ export async function PUT(req: NextRequest) {
 
   try {
     const settings: ContentSettings = await req.json();
-    const db = getSupabaseClient();
-    if (!db) throw new Error('Supabase not configured');
+    const db = getServiceClient();
 
-    const rows = CONTENT_KEYS.map((key) => ({
+    const rows: SettingRow[] = CONTENT_KEYS.map((key) => ({
       key,
       value: key === 'slogans'
         ? JSON.stringify(settings.slogans)

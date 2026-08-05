@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { X, Plus, Trash2, Package, Upload, Link, ImageIcon } from 'lucide-react';
+import { X, Trash2, Package, Upload, Link, ImageIcon, Loader2, AlertCircle } from 'lucide-react';
 import type { Product, Category, StockStatus } from '@/types';
-import { compressImage } from '@/lib/hero-settings';
 
 interface ProductModalProps {
   product?: Product | null;
@@ -47,6 +46,7 @@ export default function ProductModal({ product, onClose, onSave }: ProductModalP
   const [addMode, setAddMode]     = useState<'none' | 'upload' | 'url'>('none');
   const [newImageUrl, setNewImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -67,12 +67,32 @@ export default function ProductModal({ product, onClose, onSave }: ProductModalP
     const arr = Array.from(files).filter((f) => f.type.startsWith('image/'));
     if (!arr.length) return;
     setUploading(true);
+    setUploadError(null);
+    const hash = process.env.NEXT_PUBLIC_ADMIN_HASH ?? '';
     try {
-      const compressed = await Promise.all(arr.map((f) => compressImage(f, 1000, 0.8)));
-      setImages((prev) => [...prev, ...compressed].slice(0, 6)); // max 6 images
+      const urls = await Promise.all(
+        arr.map(async (f) => {
+          const form = new FormData();
+          form.append('file', f);
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${hash}` },
+            body: form,
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error ?? `Upload failed (${res.status})`);
+          }
+          const { url } = await res.json();
+          return url as string;
+        })
+      );
+      setImages((prev) => [...prev, ...urls].slice(0, 6));
+      setAddMode('none');
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload échoué');
     } finally {
       setUploading(false);
-      setAddMode('none');
     }
   }, []);
 
@@ -312,8 +332,14 @@ export default function ProductModal({ product, onClose, onSave }: ProductModalP
                 />
                 {uploading ? (
                   <div className="flex flex-col items-center gap-2">
-                    <div className="w-6 h-6 border-2 border-[#C9A84C]/30 border-t-[#C9A84C] rounded-full animate-spin" />
-                    <p className="text-white/50 text-sm">Compression en cours…</p>
+                    <Loader2 className="w-6 h-6 text-[#C9A84C] animate-spin" />
+                    <p className="text-white/50 text-sm">Upload en cours…</p>
+                  </div>
+                ) : uploadError ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <AlertCircle className="w-6 h-6 text-red-400" />
+                    <p className="text-red-400 text-sm">{uploadError}</p>
+                    <p className="text-white/30 text-xs">Vérifiez que le bucket &quot;product-images&quot; existe dans Supabase Storage</p>
                   </div>
                 ) : (
                   <>
