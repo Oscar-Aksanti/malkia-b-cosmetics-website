@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServiceClient } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 
 const BUCKET = 'product-images';
 
@@ -22,7 +22,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const db = getServiceClient();
+    const db = getSupabaseClient();
+    if (!db) throw new Error('Supabase not configured');
     const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
