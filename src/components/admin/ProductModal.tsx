@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { X, Trash2, Package, Upload, Link, ImageIcon, Loader2, AlertCircle } from 'lucide-react';
 import type { Product, Category, StockStatus } from '@/types';
+import { productSlug } from '@/lib/slugify';
 
 interface ProductModalProps {
   product?: Product | null;
@@ -122,7 +123,7 @@ export default function ProductModal({ product, onClose, onSave }: ProductModalP
     const saved: Product = {
       id:             product?.id ?? crypto.randomUUID(),
       product_code:   product?.product_code ?? `MKB-NEW-${Date.now()}`,
-      slug:           product?.slug ?? nameFr.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+      slug:           product?.slug || productSlug(nameFr, product?.product_code ?? ''),
       name_fr:        nameFr,
       name_en:        nameEn,
       description_fr: descFr,

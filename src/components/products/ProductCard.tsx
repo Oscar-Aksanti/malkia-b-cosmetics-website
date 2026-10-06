@@ -57,6 +57,10 @@ export default function ProductCard({ product }: ProductCardProps) {
     out_of_stock:'text-red-500',
   };
 
+  /* Fall back to the product id when a slug is missing, so the detail page
+   * stays reachable instead of linking to /produits/null. */
+  const productHref = product.slug || product.id;
+
   return (
     <motion.div
       whileHover={{ y: -6 }}
@@ -64,7 +68,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_36px_rgba(201,168,76,0.18)] transition-shadow duration-300 flex flex-col will-change-transform"
     >
       {/* ── Image ─────────────────────────────────────────────────────── */}
-      <Link href={`/produits/${product.slug}`} className="block relative aspect-square overflow-hidden group bg-soft-pink">
+      <Link href={`/produits/${productHref}`} className="block relative aspect-square overflow-hidden group bg-soft-pink">
         <Image
           src={product.images[0] || '/images/logos/logo-simplified.png'}
           alt={name}
@@ -112,7 +116,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </span>
         </div>
 
-        <Link href={`/produits/${product.slug}`}>
+        <Link href={`/produits/${productHref}`}>
           <h3 className="font-heading text-base md:text-lg text-deep leading-snug line-clamp-2 hover:text-gold-dark transition-colors">
             {name}
           </h3>

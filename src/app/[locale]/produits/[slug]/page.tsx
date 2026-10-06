@@ -12,14 +12,19 @@ export const dynamicParams = true;
 export const dynamic = 'force-dynamic';
 
 /* ── Fetch helpers ────────────────────────────────────────────────────────── */
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/* Accepts either a slug or a product id, so products whose slug is missing
+ * are still reachable through the id fallback used by ProductCard. */
 async function getProductFromDB(slug: string): Promise<Product | null> {
   try {
     const db = getSupabaseClient();
     if (!db) return null;
+    const column = UUID_REGEX.test(slug) ? 'id' : 'slug';
     const { data, error } = await db
       .from('products')
       .select('*')
-      .eq('slug', slug)
+      .eq(column, slug)
       .eq('is_active', true)
       .single();
     if (error || !data) return null;

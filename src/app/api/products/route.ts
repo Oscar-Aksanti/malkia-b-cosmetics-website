@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient, getServiceClient } from '@/lib/supabase';
+import { productSlug } from '@/lib/slugify';
 
 function isAuthorized(req: NextRequest): boolean {
   const token = req.headers.get('authorization')?.replace('Bearer ', '') ?? '';
@@ -38,9 +39,24 @@ export async function PUT(req: NextRequest) {
     const db = getServiceClient();
     const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+    /* Two products may legitimately share a name, so suffix repeats (-2, -3…)
+     * the same way the SQL backfill does, keeping every slug reachable. */
+    const usedSlugs = new Set<string>();
+    const uniqueSlug = (p: Record<string, unknown>): string => {
+      const wanted = String(p.slug ?? '').trim() ||
+        productSlug(String(p.name_fr ?? ''), String(p.product_code ?? ''));
+      let candidate = wanted;
+      for (let n = 2; usedSlugs.has(candidate); n += 1) candidate = `${wanted}-${n}`;
+      usedSlugs.add(candidate);
+      return candidate;
+    };
+
     const dbProducts = products.map((p: Record<string, unknown>) => {
       const base: Record<string, unknown> = {
         product_code:   p.product_code,
+        // Never let a product reach the DB without a slug — its detail page
+        // is looked up by slug and would 404 otherwise.
+        slug:           uniqueSlug(p),
         name_fr:        p.name_fr,
         name_en:        p.name_en,
         description_fr: p.description_fr,
@@ -86,6 +102,8 @@ export async function POST(req: NextRequest) {
       ...product,
       images: (product.images as string[]).filter((img: string) => !img.startsWith('data:')),
       product_code: product.product_code?.startsWith('MKB-NEW-') ? '' : product.product_code,
+      slug: String(product.slug ?? '').trim() ||
+            productSlug(String(product.name_fr ?? ''), String(product.product_code ?? '')),
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (db as any).from('products').insert(toInsert).select().single();
