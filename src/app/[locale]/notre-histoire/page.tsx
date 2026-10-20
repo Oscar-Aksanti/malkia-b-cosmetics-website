@@ -125,7 +125,7 @@ export default async function NotrHistoirePage() {
               <div className="grid grid-cols-3 gap-4 mt-10">
                 {[
                   { value: '2015', label: t('founded') },
-                  { value: '2', label: 'Boutiques' },
+                  { value: '4', label: 'Boutiques' },
                   { value: '🌍', label: 'Worldwide' },
                 ].map(({ value, label }) => (
                   <div key={label} className="text-center p-4 bg-white rounded-2xl shadow-sm">

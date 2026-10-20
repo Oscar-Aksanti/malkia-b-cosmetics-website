@@ -89,7 +89,7 @@ export default async function TestimonialsSection() {
             { value: '500+', label: t('ordersLabel') },
             { value: '4.9/5', label: t('ratingLabel') },
             { value: '2015', label: t('sinceLabel') },
-            { value: '2', label: t('storesLabel') },
+            { value: '4', label: t('storesLabel') },
           ].map(({ value, label }) => (
             <div key={label} className="text-center">
               <p className="font-heading text-3xl md:text-4xl text-deep font-bold">{value}</p>
