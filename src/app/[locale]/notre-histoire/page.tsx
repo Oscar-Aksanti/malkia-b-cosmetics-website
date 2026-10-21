@@ -144,7 +144,7 @@ export default async function NotrHistoirePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <p className="font-accent text-gold text-xl mb-3">— Our DNA —</p>
-            <h2 className="font-heading text-3xl md:text-5xl text-white">Nos valeurs</h2>
+            <h2 className="font-heading text-3xl md:text-5xl text-white">{t('valuesTitle')}</h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">

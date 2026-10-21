@@ -144,7 +144,8 @@
       "authenticityDesc": "A brand close to you",
       "inclusivity": "Inclusivity",
       "inclusivityDesc": "For all skin tones"
-    }
+    },
+    "valuesTitle": "Our values"
   },
   "contact": {
     "title": "Contact Us",
@@ -157,7 +158,11 @@
     "whatsappCta": "Or contact us directly via WhatsApp",
     "success": "Message sent! We'll get back to you soon.",
     "rwanda": "Kigali, Rwanda",
-    "drc": "Bukavu, DRCongo"
+    "drc": "Bukavu, DRCongo",
+    "letsTalk": "💬 Let's talk",
+    "mainChannel": "Main sales channel",
+    "orderWhatsapp": "Order via WhatsApp",
+    "stores": "Stores"
   },
   "stores": {
     "title": "Our Stores",
@@ -174,7 +179,13 @@
     "worldwide": "Worldwide Delivery Available",
     "worldwideNote": "Worldwide delivery available — order from anywhere via WhatsApp",
     "contactUs": "Contact Us",
-    "worldwideSubtitle": "Order from anywhere in the world"
+    "worldwideSubtitle": "Order from anywhere in the world",
+    "accentLabel": "📍 Our stores",
+    "addressesAccent": "📍 Our addresses",
+    "addressLabel": "Address",
+    "hoursLabel": "Opening hours",
+    "worldwideTitle": "Worldwide Delivery",
+    "worldwideBody": "Not in Rwanda or DRC? No problem. We ship worldwide. Order via WhatsApp and we'll guide you through delivery."
   },
   "slogans": {
     "label": "Our slogans"

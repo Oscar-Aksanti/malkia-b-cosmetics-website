@@ -54,7 +54,7 @@ export default async function BoutiquesPage() {
       {/* Header */}
       <div className="bg-deep py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="font-accent text-gold text-xl mb-3">📍 Nos adresses</p>
+          <p className="font-accent text-gold text-xl mb-3">{t('addressesAccent')}</p>
           <h1 className="font-heading text-4xl md:text-6xl text-white mb-4">{t('title')}</h1>
           <p className="font-body text-white/50 text-lg">{t('subtitle')}</p>
         </div>
@@ -93,7 +93,7 @@ export default async function BoutiquesPage() {
                     <MapPin className="w-5 h-5 text-gold" />
                   </div>
                   <div>
-                    <p className="font-body font-semibold text-deep text-sm">Adresse</p>
+                    <p className="font-body font-semibold text-deep text-sm">{t('addressLabel')}</p>
                     <p className="font-body text-deep/60 text-sm">{address}</p>
                   </div>
                 </div>
@@ -118,7 +118,7 @@ export default async function BoutiquesPage() {
                     <Clock className="w-5 h-5 text-gold" />
                   </div>
                   <div>
-                    <p className="font-body font-semibold text-deep text-sm">Horaires</p>
+                    <p className="font-body font-semibold text-deep text-sm">{t('hoursLabel')}</p>
                     <p className="font-body text-deep/60 text-sm">{hours}</p>
                   </div>
                 </div>
@@ -154,9 +154,9 @@ export default async function BoutiquesPage() {
       <section className="py-16 bg-deep text-center">
         <div className="max-w-2xl mx-auto px-4">
           <Globe className="w-12 h-12 text-gold mx-auto mb-4" />
-          <h2 className="font-heading text-3xl text-white mb-3">Livraison Mondiale</h2>
+          <h2 className="font-heading text-3xl text-white mb-3">{t('worldwideTitle')}</h2>
           <p className="font-body text-white/60 mb-6">
-            Vous n&apos;êtes pas au Rwanda ou en RDC ? Pas de problème. Nous livrons dans le monde entier. Commandez via WhatsApp et nous vous guiderons pour la livraison.
+            {t('worldwideBody')}
           </p>
           <a
             href="https://wa.me/243971601855"

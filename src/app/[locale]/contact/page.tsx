@@ -35,7 +35,7 @@ export default function ContactPage() {
       {/* Header */}
       <div className="bg-deep py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="font-accent text-gold text-xl mb-3">💬 Parlons</p>
+          <p className="font-accent text-gold text-xl mb-3">{t('letsTalk')}</p>
           <h1 className="font-heading text-4xl md:text-6xl text-white mb-4">{t('title')}</h1>
           <p className="font-body text-white/50 text-lg">{t('subtitle')}</p>
         </div>
@@ -127,7 +127,7 @@ export default function ContactPage() {
                 <FaWhatsapp className="w-8 h-8 text-whatsapp" />
                 <div>
                   <p className="font-body font-semibold text-deep">WhatsApp</p>
-                  <p className="font-body text-sm text-deep/50">Canal de vente principal</p>
+                  <p className="font-body text-sm text-deep/50">{t('mainChannel')}</p>
                 </div>
               </div>
               <a
@@ -137,13 +137,13 @@ export default function ContactPage() {
                 className="flex items-center justify-center gap-2 w-full py-3 bg-whatsapp hover:bg-whatsapp-dark text-white font-body font-semibold rounded-xl transition-colors duration-200"
               >
                 <FaWhatsapp className="w-4 h-4" />
-                Commander via WhatsApp
+                {t('orderWhatsapp')}
               </a>
             </div>
 
             {/* Phones */}
             <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
-              <h3 className="font-heading text-lg text-deep">Téléphone</h3>
+              <h3 className="font-heading text-lg text-deep">{t('phone')}</h3>
               {[
                 { label: t('rwanda'), phone: '+250 788 450 058', flag: '🇷🇼' },
                 { label: t('drc'),    phone: '+243 995 945 889', flag: '🇨🇩' },
@@ -165,7 +165,7 @@ export default function ContactPage() {
 
             {/* Addresses */}
             <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
-              <h3 className="font-heading text-lg text-deep">Boutiques</h3>
+              <h3 className="font-heading text-lg text-deep">{t('stores')}</h3>
               {[
                 { label: 'Kigali, Rwanda',   address: 'Nyamirambo-Kigali', flag: '🇷🇼' },
                 { label: 'Bukavu, DRCongo',  address: 'Mosquée Nyawera-Bukavu', flag: '🇨🇩' },

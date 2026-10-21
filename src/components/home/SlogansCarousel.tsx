@@ -60,7 +60,7 @@ export default function SlogansCarousel() {
       <div
         className="absolute inset-0 opacity-5 pointer-events-none"
         style={{
-          backgroundImage: 'url(/images/logos/logo-malkia-detailed.png)',
+          backgroundImage: 'url(/images/logos/logo-detailed.png)',
           backgroundRepeat: 'repeat',
           backgroundSize: '400px',
         }}

@@ -144,7 +144,8 @@
       "authenticityDesc": "Une marque proche de vous",
       "inclusivity": "Inclusivité",
       "inclusivityDesc": "Pour toutes les carnations"
-    }
+    },
+    "valuesTitle": "Nos valeurs"
   },
   "contact": {
     "title": "Contactez-nous",
@@ -157,7 +158,11 @@
     "whatsappCta": "Ou contactez-nous directement via WhatsApp",
     "success": "Message envoyé ! Nous vous répondrons bientôt.",
     "rwanda": "Kigali, Rwanda",
-    "drc": "Bukavu, DRCongo"
+    "drc": "Bukavu, DRCongo",
+    "letsTalk": "💬 Parlons",
+    "mainChannel": "Canal de vente principal",
+    "orderWhatsapp": "Commander via WhatsApp",
+    "stores": "Boutiques"
   },
   "stores": {
     "title": "Nos Boutiques",
@@ -174,7 +179,13 @@
     "worldwide": "Livraison Mondiale Disponible",
     "worldwideNote": "Livraison mondiale disponible — commandez où que vous soyez via WhatsApp",
     "contactUs": "Nous contacter",
-    "worldwideSubtitle": "Commandez où que vous soyez"
+    "worldwideSubtitle": "Commandez où que vous soyez",
+    "accentLabel": "📍 Nos boutiques",
+    "addressesAccent": "📍 Nos adresses",
+    "addressLabel": "Adresse",
+    "hoursLabel": "Horaires",
+    "worldwideTitle": "Livraison Mondiale",
+    "worldwideBody": "Vous n'êtes pas au Rwanda ou en RDC ? Pas de problème. Nous livrons dans le monde entier. Commandez via WhatsApp et nous vous guiderons pour la livraison."
   },
   "slogans": [
     "Unlock Your Beauty From Within",
