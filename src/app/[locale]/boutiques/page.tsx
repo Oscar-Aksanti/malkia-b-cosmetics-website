@@ -16,13 +16,11 @@ export async function generateMetadata({
 const STORES = [
   {
     key: 'kigali',
-    title: 'Boutique Kigali',
     city: 'Kigali',
     country: 'Rwanda',
     flag: '🇷🇼',
     address: 'Nyamirambo-Kigali, Rwanda',
     phone: '+250 788 450 058',
-    hours: 'Lun – Sam : 8h00 – 20h00',
     mapEmbed: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3987.50!2d30.0444!3d-1.9706!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x19dca6a05c4a6b7d%3A0x1a3e4f8b2c7d5e9f!2sNyamirambo%2C%20Kigali!5e0!3m2!1sfr!2srw!4v1700000000000',
     mapsUrl: 'https://maps.google.com/?q=Nyamirambo,Kigali,Rwanda',
     waPhone: '250788450058',
@@ -31,13 +29,11 @@ const STORES = [
   },
   {
     key: 'bukavu',
-    title: 'Boutique Bukavu',
     city: 'Bukavu',
     country: 'DRCongo',
     flag: '🇨🇩',
     address: 'Mosquée Nyawera-Bukavu, DRCongo',
     phone: '+243 995 945 889',
-    hours: 'Lun – Sam : 8h00 – 20h00',
     mapEmbed: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.8!2d28.8487!3d-2.4917!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x19c1b7a07a4e1b4d%3A0x9c4b8e2d3f1a5c7e!2sBukavu%2C%20DRC!5e0!3m2!1sfr!2scd!4v1700000000001',
     mapsUrl: 'https://maps.google.com/?q=Nyawera+Mosque,Bukavu,DRC',
     waPhone: '243995945889',
@@ -62,7 +58,7 @@ export default async function BoutiquesPage() {
 
       {/* Stores */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-16">
-        {STORES.map(({ key, title, city, country, flag, address, phone, hours, mapEmbed, mapsUrl, waPhone, color, textColor }) => (
+        {STORES.map(({ key, city, country, flag, address, phone, mapEmbed, mapsUrl, waPhone, color, textColor }, idx) => (
           <div key={key} className="grid md:grid-cols-2 gap-8 items-center">
             {/* Map */}
             <div className="relative rounded-3xl overflow-hidden h-72 md:h-96 shadow-xl">
@@ -84,7 +80,7 @@ export default async function BoutiquesPage() {
 
             {/* Info */}
             <div className="bg-white rounded-3xl p-8 shadow-sm">
-              <h2 className="font-heading text-2xl md:text-3xl text-deep mb-2">{title}</h2>
+              <h2 className="font-heading text-2xl md:text-3xl text-deep mb-2">{t(`store${idx + 1}Title`)}</h2>
               <p className="font-accent text-gold text-base mb-6">Beauty Specialists</p>
 
               <div className="space-y-4 mb-8">
@@ -103,7 +99,7 @@ export default async function BoutiquesPage() {
                     <Phone className="w-5 h-5 text-gold" />
                   </div>
                   <div>
-                    <p className="font-body font-semibold text-deep text-sm">Téléphone</p>
+                    <p className="font-body font-semibold text-deep text-sm">{t('phoneLabel')}</p>
                     <a
                       href={`tel:${phone.replace(/\s/g, '')}`}
                       className="font-body text-deep/60 text-sm hover:text-gold transition-colors"
@@ -119,7 +115,7 @@ export default async function BoutiquesPage() {
                   </div>
                   <div>
                     <p className="font-body font-semibold text-deep text-sm">{t('hoursLabel')}</p>
-                    <p className="font-body text-deep/60 text-sm">{hours}</p>
+                    <p className="font-body text-deep/60 text-sm">{t('hours')}</p>
                   </div>
                 </div>
               </div>
@@ -133,7 +129,7 @@ export default async function BoutiquesPage() {
                   className="flex items-center justify-center gap-2 py-3 border-2 border-gold text-gold hover:bg-gold hover:text-deep font-body font-semibold rounded-full transition-all duration-200 text-sm"
                 >
                   <ExternalLink className="w-4 h-4" />
-                  Voir l&apos;itinéraire
+                  {t('getDirections')}
                 </a>
                 <a
                   href={`https://wa.me/${waPhone}`}
@@ -142,7 +138,7 @@ export default async function BoutiquesPage() {
                   className="flex items-center justify-center gap-2 py-3 bg-whatsapp hover:bg-whatsapp-dark text-white font-body font-semibold rounded-full transition-colors duration-200 text-sm"
                 >
                   <FaWhatsapp className="w-4 h-4" />
-                  Contacter via WhatsApp
+                  {t('contactWhatsapp')}
                 </a>
               </div>
             </div>
@@ -165,7 +161,7 @@ export default async function BoutiquesPage() {
             className="inline-flex items-center gap-2 px-8 py-4 bg-whatsapp hover:bg-whatsapp-dark text-white font-body font-semibold rounded-full transition-colors duration-200"
           >
             <FaWhatsapp className="w-5 h-5" />
-            Commander via WhatsApp
+            {t('orderWhatsapp')}
           </a>
         </div>
       </section>

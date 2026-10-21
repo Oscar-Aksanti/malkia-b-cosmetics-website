@@ -185,7 +185,10 @@
     "addressLabel": "Address",
     "hoursLabel": "Opening hours",
     "worldwideTitle": "Worldwide Delivery",
-    "worldwideBody": "Not in Rwanda or DRC? No problem. We ship worldwide. Order via WhatsApp and we'll guide you through delivery."
+    "worldwideBody": "Not in Rwanda or DRC? No problem. We ship worldwide. Order via WhatsApp and we'll guide you through delivery.",
+    "phoneLabel": "Phone",
+    "contactWhatsapp": "Contact via WhatsApp",
+    "orderWhatsapp": "Order via WhatsApp"
   },
   "slogans": {
     "label": "Our slogans"

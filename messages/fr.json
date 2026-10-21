@@ -185,7 +185,10 @@
     "addressLabel": "Adresse",
     "hoursLabel": "Horaires",
     "worldwideTitle": "Livraison Mondiale",
-    "worldwideBody": "Vous n'êtes pas au Rwanda ou en RDC ? Pas de problème. Nous livrons dans le monde entier. Commandez via WhatsApp et nous vous guiderons pour la livraison."
+    "worldwideBody": "Vous n'êtes pas au Rwanda ou en RDC ? Pas de problème. Nous livrons dans le monde entier. Commandez via WhatsApp et nous vous guiderons pour la livraison.",
+    "phoneLabel": "Téléphone",
+    "contactWhatsapp": "Contacter via WhatsApp",
+    "orderWhatsapp": "Commander via WhatsApp"
   },
   "slogans": [
     "Unlock Your Beauty From Within",
